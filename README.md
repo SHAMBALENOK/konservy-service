@@ -1,2 +1,2 @@
 # konservy-service
-Bank actives managing application
+Bank actives safety application
