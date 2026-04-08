@@ -1,5 +1,6 @@
 # konservy-service
 Bank actives safety application
+```
 src/
 ├── api/               # Маршруты, middleware, Pydantic-схемы запросов/ответов
 ├── core/              # Бизнес-логика, управление транзакциями, сервисы
@@ -11,3 +12,4 @@ tests/
 ├── unit/              # core/ без внешних зависимостей
 ├── integration/       # БД, API-эндпоинты, транзакционные сценарии
 └── conftest.py        # Фикстуры, тестовая БД, моки внешних сервисов
+```
