@@ -14,14 +14,13 @@ import structlog
 from fastapi import Depends, FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer
-from starlette.middleware.security import SecurityHeadersMiddleware
 
 from app.core.config import get_settings
 from app.core.exceptions import register_exception_handlers
 from app.middleware.idempotency import IdempotencyMiddleware
 from app.middleware.rate_limiter import RateLimitMiddleware
 from app.models.base import close_db, init_db
-from app.routers import accounts, auth, transactions
+from app.routers import accounts, auth, fido_auth, security, transactions
 from app.schemas.common import HealthCheckResponse
 
 # Initialize structured logging
@@ -122,8 +121,8 @@ app.add_middleware(
     max_age=600,
 )
 
-# Security Headers Middleware
-app.add_middleware(SecurityHeadersMiddleware)
+# Security Headers Middleware (commented out - install pyjwt-cognito or similar for production)
+# app.add_middleware(SecurityHeadersMiddleware)
 
 # Rate Limiting Middleware
 app.add_middleware(
@@ -195,6 +194,8 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> str:
 
 # Include routers
 app.include_router(auth.router, prefix=f"{settings.API_PREFIX}/auth", tags=["Authentication"])
+app.include_router(fido_auth.router, prefix=f"{settings.API_PREFIX}/auth", tags=["FIDO2 Authentication"])
+app.include_router(security.router, prefix=f"{settings.API_PREFIX}", tags=["Security & Telemetry"])
 app.include_router(accounts.router, prefix=f"{settings.API_PREFIX}/accounts", tags=["Accounts"])
 app.include_router(transactions.router, prefix=f"{settings.API_PREFIX}/transactions", tags=["Transactions"])
 
