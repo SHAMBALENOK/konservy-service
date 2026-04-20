@@ -1,5 +1,6 @@
 # Core framework
 fastapi>=0.110.0
+python-multipart>=0.0.6
 uvicorn[standard]>=0.27.0
 starlette>=0.35.0
 
