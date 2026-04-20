@@ -15,13 +15,13 @@ from fastapi import Depends, FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer
 
-from app.core.config import get_settings
-from app.core.exceptions import register_exception_handlers
-from app.middleware.idempotency import IdempotencyMiddleware
-from app.middleware.rate_limiter import RateLimitMiddleware
-from app.models.base import close_db, init_db
-from app.routers import accounts, auth, fido_auth, security, transactions
-from app.schemas.common import HealthCheckResponse
+from core.config import get_settings
+from core.exceptions import register_exception_handlers
+from middleware.idempotency import IdempotencyMiddleware
+from middleware.rate_limiter import RateLimitMiddleware
+from models.base import close_db, init_db
+from routers import accounts, auth, fido_auth, security, transactions
+from schemas.common import HealthCheckResponse
 
 # Initialize structured logging
 structlog.configure(
@@ -182,13 +182,13 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> str:
     In production, this would validate the token and extract user info.
     For now, it's a placeholder that returns the token subject.
     """
-    from app.core.security import get_current_user_id_from_token
+    from core.security import get_current_user_id_from_token
     
     try:
         user_id = get_current_user_id_from_token(token)
         return user_id
     except Exception:
-        from app.core.exceptions import UnauthorizedError
+        from core.exceptions import UnauthorizedError
         raise UnauthorizedError(message="Invalid or expired token")
 
 
