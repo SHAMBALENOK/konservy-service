@@ -1,7 +1,7 @@
 """Middleware package."""
 
-from app.middleware.idempotency import IdempotencyMiddleware, validate_idempotency_key
-from app.middleware.rate_limiter import RateLimitMiddleware, RateLimiter
+from middleware.idempotency import IdempotencyMiddleware, validate_idempotency_key
+from middleware.rate_limiter import RateLimitMiddleware, RateLimiter
 
 __all__ = [
     "IdempotencyMiddleware",
