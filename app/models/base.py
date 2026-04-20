@@ -11,6 +11,13 @@ from app.core.config import get_settings
 
 settings = get_settings()
 
+
+class AsyncSession(AsyncAttrs):
+    """Custom async session with additional utilities."""
+
+    pass
+
+
 # Create async engine with connection pooling
 engine = create_async_engine(
     str(settings.DATABASE_URL),
@@ -26,12 +33,6 @@ async_session_factory = async_sessionmaker(
     autoflush=False,
     autocommit=False,
 )
-
-
-class AsyncSession(AsyncAttrs):
-    """Custom async session with additional utilities."""
-
-    pass
 
 
 mapper_registry = registry()
