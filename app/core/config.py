@@ -64,14 +64,6 @@ class Settings(BaseSettings):
             # Ensure we're using the asyncpg driver
             if v.startswith("postgresql://"):
                 v = v.replace("postgresql://", "postgresql+asyncpg://", 1)
-            
-            # Add sslmode=require for asyncpg if not already specified
-            if "postgresql+asyncpg://" in v and "sslmode=" not in v:
-                # Check if there are existing query parameters
-                if "?" in v:
-                    return f"{v}&sslmode=require"
-                else:
-                    return f"{v}?sslmode=require"
             return v
         raise ValueError("DATABASE_URL must be a string")
 
