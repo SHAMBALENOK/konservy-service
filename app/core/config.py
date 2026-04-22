@@ -4,9 +4,9 @@ All configuration is loaded from environment variables.
 """
 
 from functools import lru_cache
-from typing import Any
+from typing import Any, Optional
 
-from pydantic import PostgresDsn, RedisDsn, field_validator
+from pydantic import PostgresDsn, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -38,8 +38,8 @@ class Settings(BaseSettings):
     DB_POOL_TIMEOUT: int = 30
     DB_POOL_RECYCLE: int = 1800
 
-    # Redis
-    REDIS_URL: RedisDsn
+    # Redis (optional)
+    REDIS_URL: Optional[str] = None
     REDIS_DB: int = 0
 
     # Security
@@ -63,14 +63,6 @@ class Settings(BaseSettings):
         if isinstance(v, str):
             return v
         raise ValueError("DATABASE_URL must be a string")
-
-    @field_validator("REDIS_URL", mode="before")
-    @classmethod
-    def assemble_redis_url(cls, v: str | None) -> str:
-        """Validate and assemble Redis URL."""
-        if isinstance(v, str):
-            return v
-        raise ValueError("REDIS_URL must be a string")
 
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod

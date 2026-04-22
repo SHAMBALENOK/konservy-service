@@ -12,19 +12,26 @@ sqlalchemy[asyncio]>=2.0.23
 asyncpg>=0.29.0
 alembic>=1.13.0
 
-# Redis
+# Redis (optional)
 redis>=5.0.0
 
 # Security
 python-jose[cryptography]>=3.3.0
 passlib[bcrypt]>=1.7.4
 bcrypt>=4.1.0
+PyJWT>=2.8.0
 
 # Logging
 structlog>=23.2.0
 
 # Validation
 email-validator>=2.1.0
+
+# Form data support
+python-multipart>=0.0.6
+
+# FIDO2 support
+cbor2>=5.6.0
 
 # Testing (optional, for development)
 pytest>=7.4.0
