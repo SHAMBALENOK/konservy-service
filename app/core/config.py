@@ -6,7 +6,7 @@ All configuration is loaded from environment variables.
 from functools import lru_cache
 from typing import Any, Optional
 
-from pydantic import PostgresDsn, field_validator
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -32,7 +32,7 @@ class Settings(BaseSettings):
     WORKERS: int = 4
 
     # Database
-    DATABASE_URL: PostgresDsn
+    DATABASE_URL: str
     DB_POOL_SIZE: int = 10
     DB_MAX_OVERFLOW: int = 20
     DB_POOL_TIMEOUT: int = 30
@@ -64,6 +64,11 @@ class Settings(BaseSettings):
             # Ensure we're using the asyncpg driver
             if v.startswith("postgresql://"):
                 v = v.replace("postgresql://", "postgresql+asyncpg://", 1)
+            # Add sslmode=require if not present (for Render.com)
+            if "?" not in v:
+                v = f"{v}?sslmode=require"
+            elif "sslmode" not in v:
+                v = f"{v}&sslmode=require"
             return v
         raise ValueError("DATABASE_URL must be a string")
 
