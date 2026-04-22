@@ -61,6 +61,10 @@ class Settings(BaseSettings):
     def assemble_db_url(cls, v: str | None) -> str:
         """Validate and assemble database URL."""
         if isinstance(v, str):
+            # Add sslmode=require for asyncpg if not already specified
+            if "postgresql+asyncpg://" in v and "sslmode=" not in v:
+                separator = "&" if "?" in v else "?"
+                return f"{v}{separator}sslmode=require"
             return v
         raise ValueError("DATABASE_URL must be a string")
 
