@@ -64,11 +64,6 @@ class Settings(BaseSettings):
             # Ensure we're using the asyncpg driver
             if v.startswith("postgresql://"):
                 v = v.replace("postgresql://", "postgresql+asyncpg://", 1)
-            # Add sslmode=require if not present (for Render.com)
-            if "?" not in v:
-                v = f"{v}?sslmode=require"
-            elif "sslmode" not in v:
-                v = f"{v}&sslmode=require"
             return v
         raise ValueError("DATABASE_URL must be a string")
 
