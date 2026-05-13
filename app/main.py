@@ -8,19 +8,12 @@ import time
 import uuid
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import Any, AsyncGenerator, List
 
+import redis.asyncio as redis
 import structlog
 from fastapi import Depends, FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer
-
-try:
-    import redis.asyncio as redis
-    REDIS_AVAILABLE = True
-except ImportError:
-    redis = None  # type: ignore
-    REDIS_AVAILABLE = False
 
 from app.core.config import get_settings
 from app.core.exceptions import register_exception_handlers
@@ -47,8 +40,8 @@ structlog.configure(
 logger = structlog.get_logger(__name__)
 settings = get_settings()
 
-# Redis client for caching and rate limiting (optional)
-redis_client: Any | None = None
+# Redis client for caching and rate limiting
+redis_client: redis.Redis | None = None
 
 
 @asynccontextmanager
@@ -63,33 +56,26 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     await init_db()
     logger.info("Database initialized")
     
-    # Initialize Redis connection (optional)
-    redis_client = None
-    if REDIS_AVAILABLE and settings.REDIS_URL:
-        try:
-            redis_client = redis.from_url(  # type: ignore
-                settings.REDIS_URL,
-                db=settings.REDIS_DB,
-                decode_responses=True,
-            )
-            await redis_client.ping()  # type: ignore
-            logger.info("Redis connected")
-        except Exception as e:
-            logger.warning("Redis connection failed, running without Redis", error=str(e))
-            redis_client = None
-    else:
-        if not settings.REDIS_URL:
-            logger.info("Redis URL not provided, running without Redis")
-        elif not REDIS_AVAILABLE:
-            logger.warning("Redis package not installed, running without Redis")
+    # Initialize Redis connection
+    try:
+        redis_client = redis.from_url(
+            str(settings.REDIS_URL),
+            db=settings.REDIS_DB,
+            decode_responses=True,
+        )
+        await redis_client.ping()
+        logger.info("Redis connected")
+    except Exception as e:
+        logger.warning("Redis connection failed", error=str(e))
+        redis_client = None
     
     yield
     
     # Shutdown
     logger.info("Shutting down Banking API")
     
-    if redis_client and REDIS_AVAILABLE:
-        await redis_client.close()  # type: ignore
+    if redis_client:
+        await redis_client.close()
         logger.info("Redis connection closed")
     
     await close_db()

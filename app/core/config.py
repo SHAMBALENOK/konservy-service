@@ -4,9 +4,9 @@ All configuration is loaded from environment variables.
 """
 
 from functools import lru_cache
-from typing import Any, Optional
+from typing import Any
 
-from pydantic import field_validator
+from pydantic import PostgresDsn, RedisDsn, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -32,14 +32,14 @@ class Settings(BaseSettings):
     WORKERS: int = 4
 
     # Database
-    DATABASE_URL: str
+    DATABASE_URL: PostgresDsn
     DB_POOL_SIZE: int = 10
     DB_MAX_OVERFLOW: int = 20
     DB_POOL_TIMEOUT: int = 30
     DB_POOL_RECYCLE: int = 1800
 
-    # Redis (optional)
-    REDIS_URL: Optional[str] = None
+    # Redis
+    REDIS_URL: RedisDsn
     REDIS_DB: int = 0
 
     # Security
@@ -61,16 +61,16 @@ class Settings(BaseSettings):
     def assemble_db_url(cls, v: str | None) -> str:
         """Validate and assemble database URL."""
         if isinstance(v, str):
-            # Ensure we're using the asyncpg driver
-            if v.startswith("postgresql://"):
-                v = v.replace("postgresql://", "postgresql+asyncpg://", 1)
-            # Remove sslmode from query string - it will be handled via connect_args
-            if "?sslmode=" in v:
-                v = v.split("?sslmode=")[0]
-            elif "&sslmode=" in v:
-                v = v.split("&sslmode=")[0]
             return v
         raise ValueError("DATABASE_URL must be a string")
+
+    @field_validator("REDIS_URL", mode="before")
+    @classmethod
+    def assemble_redis_url(cls, v: str | None) -> str:
+        """Validate and assemble Redis URL."""
+        if isinstance(v, str):
+            return v
+        raise ValueError("REDIS_URL must be a string")
 
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod

@@ -2,7 +2,6 @@
 SQLAlchemy 2.0 async base model configuration.
 """
 
-import ssl
 from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
@@ -12,24 +11,10 @@ from app.core.config import get_settings
 
 settings = get_settings()
 
-
-# SSL context for asyncpg - required for Render and most cloud PostgreSQL providers
-ssl_context = ssl.create_default_context()
-ssl_context.check_hostname = False
-ssl_context.verify_mode = ssl.CERT_NONE
-
-
-class AsyncSession(AsyncAttrs):
-    """Custom async session with additional utilities."""
-
-    pass
-
-
-# Create async engine with connection pooling and SSL support
+# Create async engine with connection pooling
 engine = create_async_engine(
     str(settings.DATABASE_URL),
     echo=settings.DEBUG,
-    connect_args={"ssl": ssl_context},
     **settings.db_engine_options,
 )
 
@@ -41,6 +26,12 @@ async_session_factory = async_sessionmaker(
     autoflush=False,
     autocommit=False,
 )
+
+
+class AsyncSession(AsyncAttrs):
+    """Custom async session with additional utilities."""
+
+    pass
 
 
 mapper_registry = registry()
