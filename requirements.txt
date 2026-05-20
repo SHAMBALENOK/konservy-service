@@ -1,3 +1,9 @@
-# Core framework
-flask
-flask_login
+fastapi
+uvicorn[standard]
+sqlalchemy
+asyncpg
+pydantic>=2.0
+python-dotenv
+passlib
+python-multipart
+jose

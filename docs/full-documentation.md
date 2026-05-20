@@ -1,6 +1,6 @@
-# Banking API - Production-Ready FastAPI Backend
+# Банковский API - Продакшн-готовый FastAPI бэкенд
 
-## 📁 Project Structure
+## 📁 Структура проекта
 
 ```
 /
@@ -12,40 +12,40 @@
 ├── app/
 │   ├── core/
 │   │   ├── __init__.py
-│   │   ├── config.py          # Pydantic Settings
-│   │   ├── security.py        # JWT, password hashing
-│   │   └── exceptions.py      # Custom error handlers
+│   │   ├── config.py          # Настройки Pydantic
+│   │   ├── security.py        # JWT, хеширование паролей
+│   │   └── exceptions.py      # Пользовательские обработчики ошибок
 │   ├── middleware/
 │   │   ├── __init__.py
-│   │   ├── idempotency.py     # Idempotency middleware
-│   │   └── rate_limiter.py    # Rate limiting
+│   │   ├── idempotency.py     # Middleware идемпотентности
+│   │   └── rate_limiter.py    # Middleware ограничения скорости
 │   ├── models/
 │   │   ├── __init__.py
-│   │   ├── base.py            # SQLAlchemy base
-│   │   ├── account.py         # Account model
-│   │   └── transaction.py     # Transaction model
+│   │   ├── base.py            # База SQLAlchemy
+│   │   ├── account.py         # Модель счета
+│   │   └── transaction.py     # Модель транзакции
 │   ├── schemas/
 │   │   ├── __init__.py
-│   │   ├── account.py         # Pydantic schemas for accounts
-│   │   ├── transaction.py     # Pydantic schemas for transactions
-│   │   └── common.py          # Common response schemas
+│   │   ├── account.py         # Pydantic схемы для счетов
+│   │   ├── transaction.py     # Pydantic схемы для транзакций
+│   │   └── common.py          # Общие response схемы
 │   ├── repositories/
 │   │   ├── __init__.py
-│   │   ├── base.py            # Generic repository
-│   │   ├── account.py         # Account repository
-│   │   └── transaction.py     # Transaction repository
+│   │   ├── base.py            # Общий репозиторий
+│   │   ├── account.py         # Репозиторий счетов
+│   │   └── transaction.py     # Репозиторий транзакций
 │   ├── services/
 │   │   ├── __init__.py
-│   │   ├── account.py         # Account business logic
-│   │   └── transaction.py     # Transaction business logic
+│   │   ├── account.py         # Бизнес-логика счетов
+│   │   └── transaction.py     # Бизнес-логика транзакций
 │   ├── routers/
 │   │   ├── __init__.py
-│   │   ├── auth.py            # Authentication endpoints
-│   │   ├── fido_auth.py       # FIDO2/WebAuthn endpoints
-│   │   ├── accounts.py        # Account endpoints
-│   │   ├── transactions.py    # Transaction endpoints
-│   │   └── security.py        # Telemetry & Security endpoints
-│   └── main.py                # App initialization
+│   │   ├── auth.py            # Endpoints аутентификации
+│   │   ├── fido_auth.py       # Endpoints FIDO2/WebAuthn
+│   │   ├── accounts.py        # Endpoints счетов
+│   │   ├── transactions.py    # Endpoints транзакций
+│   │   └── security.py        # Endpoints телеметрии и безопасности
+│   └── main.py                # Инициализация приложения
 ├── alembic.ini
 ├── docker-compose.yml
 ├── Dockerfile
@@ -55,90 +55,396 @@
 └── README.md
 ```
 
----
-
 ## 🌐 API Endpoints
 
-### Base URL
+### Базовый URL
 ```
 /api/v1
 ```
 
-### Health & Root
+### Здоровье и Корень
 ```
-GET  /health                    # Health check
-GET  /                          # API information
-GET  /docs                      # Swagger UI documentation
-GET  /redoc                     # ReDoc documentation
-GET  /openapi.json              # OpenAPI schema
+GET  /health                    # Проверка состояния
+GET  /                          # Информация об API
+GET  /docs                      # Документация Swagger UI
+GET  /redoc                     # Документация ReDoc
+GET  /openapi.json              # Схема OpenAPI
+```
+
+### 🔐 Аутентификация (`/api/v1/auth`)
+
+```
+POST /api/v1/auth/register              # Регистрация нового пользователя
+POST /api/v1/auth/login                 # Вход (OAuth2) - возврат access & refresh токенов
+POST /api/v1/auth/refresh               # Обновление access токена
+```
+
+#### FIDO2 / Passkeys Аутентификация (`/api/v1/auth/fido`)
+
+```
+POST /api/v1/auth/fido/register/challenge      # Генерация challenge для регистрации
+POST /api/v1/auth/fido/register/verify         # Проверка FIDO2 аттестации
+POST /api/v1/auth/fido/login/challenge         # Генерация challenge для входа
+POST /api/v1/auth/fido/login/verify            # Проверка FIDO2 assertion & получение токенов
+GET  /api/v1/auth/fido/credentials             # Список FIDO2 учетных данных пользователя
+DELETE /api/v1/auth/fido/credentials/{id}      # Отзыв учетных данных
+```
+
+### 👤 Счета (`/api/v1/accounts`)
+
+```
+POST   /api/v1/accounts/                       # Создание нового счета
+GET    /api/v1/accounts/                       # Список всех счетов (с пагинацией)
+GET    /api/v1/accounts/{account_id}           # Получение деталей счета
+GET    /api/v1/accounts/user/{user_id}         # Получение счета по ID пользователя
+PATCH  /api/v1/accounts/{account_id}           # Обновление счета
+POST   /api/v1/accounts/{account_id}/deposit   # Внесение средств
+POST   /api/v1/accounts/{account_id}/withdraw  # Снятие средств
+DELETE /api/v1/accounts/{account_id}           # Деактивация счета
+```
+
+**Обязательные заголовки:**
+- `X-Idempotency-Key` - Требуется для операций deposit/withdraw
+
+### 💸 Транзакции (`/api/v1/transactions`)
+
+```
+POST /api/v1/transactions/transfer              # Перевод средств между счетами
+POST /api/v1/transactions/deposit               # Внесение средств на счет
+GET  /api/v1/transactions/                      # Список всех транзакций (с пагинацией)
+GET  /api/v1/transactions/{transaction_id}      # Получение деталей транзакции
+GET  /api/v1/transactions/account/{account_id}  # Получение транзакций по счету
+```
+
+**Обязательные заголовки:**
+- `X-Idempotency-Key` - Требуется для операций transfer/deposit
+
+**Параметры запроса:**
+- `current_user` - ID исходного пользователя (для переводов)
+
+### 🛡️ Телеметрия и Безопасность (`/api/v1/telemetry`)
+
+```
+POST   /api/v1/telemetry/session                # Сбор данных телеметрии сессии
+GET    /api/v1/telemetry/security/history       # Получение истории событий безопасности
+GET    /api/v1/telemetry/devices                # Список устройств пользователя
+DELETE /api/v1/telemetry/devices/{device_id}    # Отзыв доступа к устройству
+POST   /api/v1/telemetry/devices/{device_id}/trust  # Отметить устройство как доверенное
+GET    /api/v1/telemetry/certificate-pinning    # Получение конфигурации certificate pinning
+```
+
+## 🔐 1. Поведенческая биометрия (Невидимая аутентификация)
+Вместо только отпечатка пальца/Face ID, банки могут отслеживать:
+- Ритм набора текста
+- Паттерны свайпов
+- Как вы держите телефон
+- Паттерны движения мыши
+
+✅ Работает непрерывно в фоне  
+✅ Сложно для attackers подделать  
+✅ Не требует дополнительных усилий от клиентов  
+
+---
+
+## 🧠 2. AI-адаптивная аутентификация
+Аутентификация на основе риска:
+- Вход с низким риском → никаких дополнительных шагов  
+- Вход с высоким риском (новое устройство, страна, необычное поведение) → дополнительная верификация  
+
+Использует:
+- Отпечаток устройства
+- Обнаружение аномалий местоположения
+- Моделирование поведения транзакций  
+
+✅ Снижает трение  
+✅ Останавливает мошенничество до вывода средств  
+
+---
+
+## 🔑 3. FIDO2 + Hardware-Backed Passkeys (Фишинг-безопасный вход)
+- Применять только passkeys (без fallback на пароли)
+- Привязывать учетные данные к защищенному аппаратному обеспечению (TPM, Secure Enclave)
+- Криптографическая подпись на уровне транзакции
+
+✅ Останавливает фишинг и кражу учетных данных  
+✅ Устраняет риск базы данных паролей  
+
+---
+
+## 🧬 4. Мульти-модальная биометрия
+Комбинация:
+- Лицо + голос
+- Отпечаток пальца + поведенческая биометрия
+- Пассивное обнаружение живого объекта (для предотвращения deepfakes)
+
+✅ Сложнее подделать  
+✅ Лучшее обнаружение мошенничества  
+
+---
+
+## 🌍 5. Непрерывная аутентификация (Мониторинг сессии)
+Вместо проверки только при входе:
+- Мониторинг поведения во время сессии
+- Триггер повторной аутентификации при обнаружении аномалии
+- Блокировка операций высокой ценности
+
+✅ Предотвращает захват сессии  
+✅ Защищает от захвата аккаунта  
+
+---
+
+## 🔒 6. Zero-Trust Архитектура
+- Проверять каждый запрос
+- Микросегментация внутренних систем
+- Строгая валидация идентичности между сервисами
+
+✅ Ограничивает внутренние нарушения  
+✅ Снижает боковое перемещение attackers  
+
+---
+
+## 🧾 7. Подпись транзакций (Out-of-Band Approval)
+Перед переводом средств:
+- Показать точные детали транзакции на защищенном устройстве
+- Требуется криптографическая подпись
+
+✅ Предотвращает изменение деталей транзакции вредоносным ПО  
+✅ Сильная защита для больших переводов  
+
+---
+
+## 🧑‍💻 8. Интеграция Децентрализованной Идентичности (DID)
+Клиенты хранят проверяемые учетные данные в безопасном кошельке:
+- Учетные данные KYC многоразового использования
+- Выборочное раскрытие персональных данных
+
+✅ Лучшая конфиденциальность  
+✅ Снижает кражу личности  
+
+---
+
+## 📡 9. Привязка к устройству + Аппаратное аттестация
+Привязка счетов к:
+- Только доверенным устройствам
+- Верификация модуля безопасности аппаратного обеспечения
+- Обнаружение jailbreak/root
+
+✅ Блокирует мошенничество на основе эмуляторов  
+✅ Останавливает атаки SIM-свапа  
+
+---
+
+## 🧠 10. AI Фрод “Цифровой Близнец”
+Создание поведенческой модели каждого пользователя:
+- Паттерны трат
+- Аппетит к риску
+- Привычки по местоположению
+
+Мгновенное обнаружение аномалий.
+
+✅ Персонализированное обнаружение мошенничества  
+✅ Лучше, чем системы на основе правил  
+
+---
+
+## 🎙️ 11. Голосовая биометрия для колл-центров
+Устранение вопросов безопасности:
+- “Ваш голос — ваш пароль”
+- Реальное время обнаружения спуфинга
+
+✅ Быстрее обслуживание  
+✅ Снижает социальную инженерию  
+
+---
+
+## 🛰️ 12. Гео-контекстуальная верификация
+- Гео-ограничения
+- Проверки скорости (обнаружение невозможного перемещения)
+- Доверенные зоны (дом, офис)
+
+✅ Останавливает удаленных attackers  
+
+---
+
+## 🧪 13. Постквантовая криптография (Future-Proofing)
+Обновление банковского шифрования на квантово-устойчивые алгоритмы.
+
+✅ Долгосрочная защита  
+✅ Готовность к регулированию  
+
+---
+
+## 🛡️ 14. AI-ассистент по обнаружению мошенничества (Клиентская сторона)
+Встроенный ассистент, который:
+- Обнаруживает паттерны мошенничества в описаниях переводов
+- Предупреждает пользователей перед отправкой денег
+- Выявляет признаки социальной инженерии
+
+✅ Снижает мошенничество с авторизованным推送 платежами  
+✅ Обучает пользователей в реальном времени  
+
+---
+
+# 🚀 Наиболее мощная комбинация для современных банков
+Если проектировать с нуля:
+- Только FIDO2 passkeys
+- Поведенческая биометрия
+- AI-адаптивная аутентификация
+- Непрерывный мониторинг сессии
+- Криптографическая подпись транзакций
+- Привязка к аппаратному обеспечению
+- AI-ассистент по обнаружению мошенничества
+
+# Инновационные методы безопасности для банковских услуг
+
+## 🧬 Биометрическая аутентификация
+
+| Метод | Описание | Статус |
+|-------|----------|--------|
+| **Поведенческая биометрия** | Анализ скорости набора, движения мыши, давления касания | Emerging |
+| **Распознавание голоса** | Аутентификация голосовым отпечатком для звонков/приложений | In Use |
+| **Сканирование вен узора** | Сканирование вен пальца/ладони | Emerging |
+| **Анализ походки** | Идентификация пользователей по манере ходьбы | Experimental |
+| **Обнаружение живого лица** | Предотвращение атак spoofing через фото | Growing |
+
+---
+
+## 🤖 ИИ и Машинное обучение
+
+- **Обнаружение мошенничества в реальном времени**
+  - Анализирует тысячи сигналов транзакций мгновенно
+  - Отмечает необычные паттерны трат
+- **Обнаружение аномалий**
+  - Выявляет необычные места/время входа
+  - Изменения отпечатка устройства
+- **Прогностическая оценка риска**
+  - Назначает оценки риска каждой транзакции
+  - Динамическая аутентификация на основе уровня риска  
+
+---
+
+## 🔐 Продвинутая аутентификация
+
+### Passkeys / FIDO2
+- Полностью заменяет пароли
+- Сопротивление фишингу
+- Биометрическая + криптографическая безопасность
+
+### Непрерывная аутентификация
+- Не просто проверка при входе
+- **Мониторинг всей сессии**
+- Повторная аутентификация при изменении поведения  
+
+### Zero Trust Архитектура
+```
+Никогда не доверяй → Всегда проверяй → Каждый запрос
+```
+- Каждое действие требует верификации
+- Нет неявного доверия на основе сетевого расположения
+- Принцип наименьших привилегий  
+
+---
+
+## 📱 Безопасность устройства и сети
+
+### Интеллект устройства
+- **Отпечаток устройства** — Идентификация известных/неизвестных устройств
+- **Обнаружение jailbreak/root** — Отметка скомпрометированных устройств
+- **Обнаружение SIM-свапа** — Предотвращение атак захвата SIM  
+
+### Анализ сети
+- **Обнаружение VPN/Tor** — Отметка анонимных подключений
+- **Оценка репутации IP** — Блокировка известных вредоносных IP
+- **Геолокационная верификация** — Обнаружение невозможного перемещения  
+
+---
+
+## 🔗 Блокчейн и Криптография
+
+- **Децентрализованная идентичность (DID)**
+  - Пользователи владеют своими данными идентичности
+  - Нет единой точки отказа  
+- **Доказательства нулевого знания (ZKP)**
+  - Доказательство идентичности БЕЗ раскрытия персональных данных
+  - Пример: Доказать, что вам больше 18 без показа даты рождения  
+- **Гомоморфное шифрование**
+  - Обработка зашифрованных данных без их расшифровки
+  - Банки анализируют данные без их раскрытия  
+
+---
+
+## 📲 Безопасность транзакций
+
+### Динамический CVV
+- CVV кредитной карты изменяется каждые 30-60 минут
+- Физическая карта отображает изменяющийся код
+- Украденные детали карты быстро становятся бесполезными  
+
+### Подпись транзакции
+- Критические транзакции требуют явного одобрения
+- Криптографическая подпись на каждой транзакции
+- Аналогично работе криптокошельков  
+
+### Лимиты и контроль расходов
+- Настраиваемые лимиты в реальном времени
+- Блокировка категорий торговцев
+- Географические ограничения  
+
+---
+
+## 🧠 Контекстуальная и адаптивная безопасность
+
+```
+Низкорисковая транзакция          Высокорисковая транзакция
+        ↓                                  ↓
+  Бесшовный вход               Дополнительная аутентификация
+  (только биометрия)       (биометрия + OTP + селфи)
+```
+
+**Учитываемые факторы:**
+- Сумма транзакции
+- Местоположение
+- Уровень доверия устройства
+- Время суток
+- История поведения пользователя
+- Тип сети  
+
+---
+
+## 🛡️ Новые технологии
+
+### Квантово-безопасная криптография
+- Подготовка к угрозам квантовых вычислений
+- Постквантовые алгоритмы шифрования
+- Будущее-защита инфраструктуры безопасности  
+
+### Конфиденциальные вычисления
+- **Federated Learning** — ИИ учится на данных без их просмотра
+- Банки сотрудничают в обнаружении мошенничества без обмена данными клиентов  
+
+### Верификация цифровой идентичности
+- **Интеграция eID** — Цифровые ID, выдаваемые правительством
+- **Open Banking + Strong Customer Authentication (SCA)**
+- **Автоматизация KYC** с проверкой документов через AI  
+
+---
+
+## 📊 Сводка по уровням безопасности
+
+```
+Уровень 1 → Верификация идентичности (Кто вы?)
+Уровень 2 → Доверие к устройству (Что вы используете?)
+Уровень 3 → Поведенческий анализ (Как вы действуете?)
+Уровень 4 → Риск транзакции (Что вы делаете?)
+Уровень 5 → Непрерывный мониторинг (Постоянная верификация)
 ```
 
 ---
 
-### 🔐 Authentication (`/api/v1/auth`)
+## Ключевые вызовы для рассмотрения
 
-```
-POST /api/v1/auth/register              # Register new user
-POST /api/v1/auth/login                 # Login (OAuth2) - returns access & refresh tokens
-POST /api/v1/auth/refresh               # Refresh access token
-```
-
-#### FIDO2 / Passkeys Authentication (`/api/v1/auth/fido`)
-
-```
-POST /api/v1/auth/fido/register/challenge      # Generate registration challenge
-POST /api/v1/auth/fido/register/verify         # Verify FIDO2 attestation
-POST /api/v1/auth/fido/login/challenge         # Generate login challenge
-POST /api/v1/auth/fido/login/verify            # Verify FIDO2 assertion & get tokens
-GET  /api/v1/auth/fido/credentials             # List user's FIDO2 credentials
-DELETE /api/v1/auth/fido/credentials/{id}      # Revoke a credential
-```
-
----
-
-### 👤 Accounts (`/api/v1/accounts`)
-
-```
-POST   /api/v1/accounts/                       # Create new account
-GET    /api/v1/accounts/                       # List all accounts (paginated)
-GET    /api/v1/accounts/{account_id}           # Get account details
-GET    /api/v1/accounts/user/{user_id}         # Get account by user ID
-PATCH  /api/v1/accounts/{account_id}           # Update account
-POST   /api/v1/accounts/{account_id}/deposit   # Deposit funds
-POST   /api/v1/accounts/{account_id}/withdraw  # Withdraw funds
-DELETE /api/v1/accounts/{account_id}           # Deactivate account
-```
-
-**Required Headers:**
-- `X-Idempotency-Key` - Required for deposit/withdraw operations
-
----
-
-### 💸 Transactions (`/api/v1/transactions`)
-
-```
-POST /api/v1/transactions/transfer              # Transfer funds between accounts
-POST /api/v1/transactions/deposit               # Deposit funds to account
-GET  /api/v1/transactions/                      # List all transactions (paginated)
-GET  /api/v1/transactions/{transaction_id}      # Get transaction details
-GET  /api/v1/transactions/account/{account_id}  # Get account transactions
-```
-
-**Required Headers:**
-- `X-Idempotency-Key` - Required for transfer/deposit operations
-
-**Query Parameters:**
-- `current_user` - Source user ID (for transfers)
-
----
-
-### 🛡️ Telemetry & Security (`/api/v1/telemetry`)
-
-```
-POST   /api/v1/telemetry/session                # Collect session telemetry
-GET    /api/v1/telemetry/security/history       # Get security event history
-GET    /api/v1/telemetry/devices                # List user devices
-DELETE /api/v1/telemetry/devices/{device_id}    # Revoke device access
-POST   /api/v1/telemetry/devices/{device_id}/trust  # Mark device as trusted
-GET    /api/v1/telemetry/certificate-pinning    # Get certificate pinning config
-```
+- ⚠️ **Проблемы конфиденциальности** — Хранение биометрических данных
+- ⚠️ **Доступность** — Не все пользователи могут использовать биометрию
+- ⚠️ **Соблюдение регуляций** — GDPR, PSD2 и т.д.
+- ⚠️ **Стоимость внедрения**
+- ⚠️ **Опыт пользователя** — Баланс между безопасностью и удобством  
