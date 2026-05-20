@@ -56,3 +56,89 @@
 ```
 
 ---
+
+## 🌐 API Endpoints
+
+### Base URL
+```
+/api/v1
+```
+
+### Health & Root
+```
+GET  /health                    # Health check
+GET  /                          # API information
+GET  /docs                      # Swagger UI documentation
+GET  /redoc                     # ReDoc documentation
+GET  /openapi.json              # OpenAPI schema
+```
+
+---
+
+### 🔐 Authentication (`/api/v1/auth`)
+
+```
+POST /api/v1/auth/register              # Register new user
+POST /api/v1/auth/login                 # Login (OAuth2) - returns access & refresh tokens
+POST /api/v1/auth/refresh               # Refresh access token
+```
+
+#### FIDO2 / Passkeys Authentication (`/api/v1/auth/fido`)
+
+```
+POST /api/v1/auth/fido/register/challenge      # Generate registration challenge
+POST /api/v1/auth/fido/register/verify         # Verify FIDO2 attestation
+POST /api/v1/auth/fido/login/challenge         # Generate login challenge
+POST /api/v1/auth/fido/login/verify            # Verify FIDO2 assertion & get tokens
+GET  /api/v1/auth/fido/credentials             # List user's FIDO2 credentials
+DELETE /api/v1/auth/fido/credentials/{id}      # Revoke a credential
+```
+
+---
+
+### 👤 Accounts (`/api/v1/accounts`)
+
+```
+POST   /api/v1/accounts/                       # Create new account
+GET    /api/v1/accounts/                       # List all accounts (paginated)
+GET    /api/v1/accounts/{account_id}           # Get account details
+GET    /api/v1/accounts/user/{user_id}         # Get account by user ID
+PATCH  /api/v1/accounts/{account_id}           # Update account
+POST   /api/v1/accounts/{account_id}/deposit   # Deposit funds
+POST   /api/v1/accounts/{account_id}/withdraw  # Withdraw funds
+DELETE /api/v1/accounts/{account_id}           # Deactivate account
+```
+
+**Required Headers:**
+- `X-Idempotency-Key` - Required for deposit/withdraw operations
+
+---
+
+### 💸 Transactions (`/api/v1/transactions`)
+
+```
+POST /api/v1/transactions/transfer              # Transfer funds between accounts
+POST /api/v1/transactions/deposit               # Deposit funds to account
+GET  /api/v1/transactions/                      # List all transactions (paginated)
+GET  /api/v1/transactions/{transaction_id}      # Get transaction details
+GET  /api/v1/transactions/account/{account_id}  # Get account transactions
+```
+
+**Required Headers:**
+- `X-Idempotency-Key` - Required for transfer/deposit operations
+
+**Query Parameters:**
+- `current_user` - Source user ID (for transfers)
+
+---
+
+### 🛡️ Telemetry & Security (`/api/v1/telemetry`)
+
+```
+POST   /api/v1/telemetry/session                # Collect session telemetry
+GET    /api/v1/telemetry/security/history       # Get security event history
+GET    /api/v1/telemetry/devices                # List user devices
+DELETE /api/v1/telemetry/devices/{device_id}    # Revoke device access
+POST   /api/v1/telemetry/devices/{device_id}/trust  # Mark device as trusted
+GET    /api/v1/telemetry/certificate-pinning    # Get certificate pinning config
+```
