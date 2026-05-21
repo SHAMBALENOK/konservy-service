@@ -1,9 +1,9 @@
 from fastapi import Request, Response, status
-from starlette.middleware.base import BaseMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 import time
 from typing import Dict, Any
 
-class IdempotencyMiddleware(BaseMiddleware):
+class IdempotencyMiddleware(BaseHTTPMiddleware):
     def __init__(self, app):
         super().__init__(app)
         self.idempotency_store: Dict[str, Dict[str, Any]] = {}

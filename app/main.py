@@ -71,8 +71,8 @@ def override_get_db_dependency(router):
         if hasattr(route, 'dependant'):
             # Update dependencies that are of type get_db
             for dep in route.dependant.dependencies:
-                if dep.callable.__name__ == 'get_db':
-                    dep.callable = get_db
+                if hasattr(dep, 'call') and dep.call.__name__ == 'get_db':
+                    dep.call = get_db
 
 # Apply the override to all routers
 override_get_db_dependency(auth.router)
@@ -101,4 +101,4 @@ async def root():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8001)

@@ -22,7 +22,7 @@ class AccountService:
         account = await self.account_repo.create(account_dict)
         return AccountResponse.model_validate(account)
 
-    async get_account(self, account_id: int) -> AccountResponse:
+    async def get_account(self, account_id: int) -> AccountResponse:
         account = await self.account_repo.get(account_id)
         if not account:
             raise raise_not_found("Account not found")

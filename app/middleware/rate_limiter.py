@@ -1,9 +1,9 @@
 from fastapi import Request, Response, status
-from starlette.middleware.base import BaseMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 import time
 from typing import Dict, List
 
-class RateLimiterMiddleware(BaseMiddleware):
+class RateLimiterMiddleware(BaseHTTPMiddleware):
     def __init__(self, app, limit: int, period: int):
         super().__init__(app)
         self.limit = limit
